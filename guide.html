@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>B-L-CHECK</title>
+<link rel="icon" href="docs/hal-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&family=Anuphan:wght@600;700&display=swap">
+<style>
+/* Layout: single reading column like a document worksheet — header block, numbered procedure, colour legend as a mini report, troubleshooting table */
+:root {
+  --bg: #f3f5f8;
+  --paper: #ffffff;
+  --ink: #17212e;
+  --muted: #566577;
+  --line: #d5dce5;
+  --navy: #1f4e78;
+  --navy-ink: #ffffff;
+  --accent: #1f4e78;
+  --red: #ffc7ce;   --red-ink: #9c0006;
+  --yel: #ffeb9c;   --yel-ink: #6b5200;
+  --grn: #c6efce;   --grn-ink: #1d5c2b;
+  --fmt: #e2f0d9;   --fmt-ink: #1d5c2b;
+  --blu: #ddebf7;   --blu-ink: #1f4e78;
+  --gry: #f2f2f2;   --gry-ink: #566577;
+  --code: #eef2f7;
+  --display: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --body: "IBM Plex Sans Thai", system-ui, "Leelawadee UI", "Tahoma", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151d; --paper: #172130; --ink: #e6ecf3; --muted: #9aa9bb; --line: #2b3a4d;
+    --navy: #2d6aa3; --navy-ink: #ffffff; --accent: #7fb3e6;
+    --red: #4a1f22; --red-ink: #ffb3b3; --yel: #443a17; --yel-ink: #ffe38a; --grn: #1d3b25; --grn-ink: #9be3ad;
+    --fmt: #22331f; --fmt-ink: #b7e3a6; --blu: #1b2d42; --blu-ink: #a9cdf0; --gry: #222b37; --gry-ink: #9aa9bb;
+    --code: #0f1824; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151d; --paper: #172130; --ink: #e6ecf3; --muted: #9aa9bb; --line: #2b3a4d;
+  --navy: #2d6aa3; --navy-ink: #ffffff; --accent: #7fb3e6;
+  --red: #4a1f22; --red-ink: #ffb3b3; --yel: #443a17; --yel-ink: #ffe38a; --grn: #1d3b25; --grn-ink: #9be3ad;
+  --fmt: #22331f; --fmt-ink: #b7e3a6; --blu: #1b2d42; --blu-ink: #a9cdf0; --gry: #222b37; --gry-ink: #9aa9bb;
+  --code: #0f1824; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.7; margin: 0; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 56px; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); text-wrap: balance; line-height: 1.25; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 2.9rem); letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; }
+p { margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, .mono { font-family: var(--mono); font-size: 0.88em; }
+code { background: var(--code); padding: 1px 6px; border-radius: 4px; }
+
+.head { display: grid; gap: 14px; padding-block: 8px 4px; }
+.brand { display: inline-flex; background: #ffffff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; justify-self: start; }
+.brand img { height: 44px; width: auto; display: block; max-width: 100%; }
+.tag { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); max-width: 62ch; font-size: 1.05rem; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.85rem; }
+.flow span.doc { background: var(--paper); border: 1px solid var(--line); padding: 4px 10px; border-radius: 6px; }
+.flow span.out { background: var(--navy); color: var(--navy-ink); padding: 4px 10px; border-radius: 6px; font-weight: 600; }
+.flow span.op { color: var(--muted); }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-weight: 500; text-decoration: none; border: 1px solid var(--navy); }
+.btn.primary { background: var(--navy); color: var(--navy-ink); }
+.btn.ghost { color: var(--accent); background: transparent; border-color: var(--line); }
+
+section.panel { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 24px; display: grid; gap: 16px; min-width: 0; }
+.sub { color: var(--muted); font-size: 0.95rem; }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; counter-reset: s; }
+ol.steps > li { counter-increment: s; display: grid; grid-template-columns: 2.2rem 1fr; gap: 12px; align-items: start; min-width: 0; }
+ol.steps > li::before { content: counter(s); font-family: var(--mono); font-weight: 600; width: 2.2rem; height: 2.2rem; display: grid; place-items: center; border-radius: 50%; background: var(--navy); color: var(--navy-ink); font-size: 0.95rem; }
+ol.steps li > div { min-width: 0; display: grid; gap: 4px; }
+ol.steps b { font-weight: 700; }
+.note { font-size: 0.9rem; color: var(--muted); }
+.warn { background: var(--yel); color: var(--yel-ink); border-radius: 6px; padding: 2px 8px; font-weight: 500; }
+
+.cmd { display: flex; gap: 8px; align-items: stretch; min-width: 0; }
+.cmd pre { flex: 1; min-width: 0; margin: 0; background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-family: var(--mono); font-size: 0.85rem; line-height: 1.5; }
+.cmd button { font: inherit; font-size: 0.85rem; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.split > div { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.split h3 { margin: 0; font-size: 1rem; font-family: var(--display); }
+
+.sheet-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table.sheet { border-collapse: collapse; font-size: 0.82rem; width: 100%; min-width: 640px; font-variant-numeric: tabular-nums; }
+.sheet th { background: var(--navy); color: var(--navy-ink); font-weight: 600; padding: 7px 10px; text-align: center; white-space: nowrap; }
+.sheet td { padding: 7px 10px; border-top: 1px solid var(--line); white-space: nowrap; }
+.r { background: var(--red); color: var(--red-ink); }
+.y { background: var(--yel); color: var(--yel-ink); }
+.g { background: var(--grn); color: var(--grn-ink); }
+.f { background: var(--fmt); color: var(--fmt-ink); }
+.b { background: var(--blu); color: var(--blu-ink); }
+.e { background: var(--gry); color: var(--gry-ink); }
+.caption { font-size: 0.82rem; color: var(--muted); }
+
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.legend div { border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.legend b { font-size: 0.95rem; }
+.legend span { font-size: 0.85rem; }
+
+.check-list { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; }
+ol.fields { margin: 0; padding-left: 1.6rem; columns: 2 260px; column-gap: 28px; font-size: 0.92rem; }
+ol.fields li { break-inside: avoid; }
+
+.trouble-scroll { overflow-x: auto; }
+table.trouble { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+.trouble th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.trouble td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.trouble td:first-child { font-family: var(--mono); font-size: 0.82rem; width: 40%; }
+
+footer { color: var(--muted); font-size: 0.85rem; display: grid; gap: 4px; }
+@media (max-width: 480px) { section.panel { padding: 18px; } .wrap { padding-inline: 16px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="head">
+    <div class="brand"><img src="docs/hal-logo.png" alt="HEUNG A LINE 興亞LINE株式會社"></div>
+    <div class="tag">เครื่องมือตรวจ B/L ขาออก · CLIENT B/L เทียบ DRAFT HAL</div>
+    <h1>B-L-CHECK</h1>
+    <p class="lede">เทียบ B/L ที่ลูกค้าส่งมากับ DRAFT จากระบบ HAL ครบ 27 หัวข้อ รวม RIDER / AS PER ATTACHED แล้วออกรายงาน Excel แบบใส่สี จุดไหนไม่ตรงเห็นได้ทันทีก่อนออก B/L จริง</p>
+    <div class="flow" aria-label="ขั้นตอนการทำงาน">
+      <span class="doc">CLIENT B/L.pdf</span><span class="op">+</span>
+      <span class="doc">DRAFT HAL.pdf</span><span class="op">→</span>
+      <span class="out">BL CHECK.xlsx</span>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="docs/">ตรวจออนไลน์ (ไม่ต้องติดตั้ง)</a>
+      <a class="btn ghost" href="https://github.com/Rattanao/B-L-CHECK-REPORT-Export/archive/refs/heads/main.zip">ดาวน์โหลดโปรแกรม (ZIP)</a>
+      <a class="btn ghost" href="https://github.com/Rattanao/B-L-CHECK-REPORT-Export">เปิดหน้า GitHub</a>
+    </div>
+  </header>
+
+  <section class="panel" id="install">
+    <h2>ติดตั้งครั้งแรก</h2>
+    <p class="sub">ทำครั้งเดียวต่อเครื่อง ใช้ Windows (ถ้าใช้แบบออนไลน์ ข้ามส่วนนี้ได้เลย)</p>
+    <ol class="steps">
+      <li><div>
+        <p><b>ติดตั้ง Python 3</b> จาก <a href="https://www.python.org/downloads/">python.org/downloads</a></p>
+        <p class="note">หน้าแรกของตัวติดตั้ง <span class="warn">ติ๊ก ☑ Add python.exe to PATH</span> ก่อนกด Install Now</p>
+      </div></li>
+      <li><div>
+        <p><b>ดาวน์โหลดโปรแกรม</b> กดปุ่ม “ดาวน์โหลดโปรแกรม (ZIP)” ด้านบน</p>
+        <p class="note">คลิกขวาที่ไฟล์ ZIP → Extract All แล้วเก็บโฟลเดอร์ไว้ที่ไหนก็ได้ เช่น Documents</p>
+      </div></li>
+      <li><div>
+        <p><b>รันครั้งแรกต้องต่ออินเทอร์เน็ต</b></p>
+        <p class="note">โปรแกรมจะติดตั้งไลบรารีที่ต้องใช้ (pdfplumber, openpyxl) ให้เองอัตโนมัติ</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section class="panel" id="use">
+    <h2>ใช้งานทุกครั้ง</h2>
+    <ol class="steps">
+      <li><div>
+        <p><b>วางไฟล์ในโฟลเดอร์ <code>input</code></b></p>
+        <p class="note">B/L ของลูกค้า 1 ไฟล์ และ DRAFT ของ HAL 1 ไฟล์ ชื่อไฟล์ต้องมีเลข B/L และไฟล์ DRAFT ต้องมีคำว่า <code>DRAFT</code> เช่น <code>CLIENT HASLS22260901995.pdf</code> กับ <code>DRAFT HAL HASLS22260901995.pdf</code> ใส่หลาย B/L พร้อมกันได้</p>
+      </div></li>
+      <li><div>
+        <p><b>ดับเบิลคลิก <code>run-bl-check.bat</code></b></p>
+        <p class="note">หรือดับเบิลคลิก <code>open-bl-checker.bat</code> เพื่อเปิดหน้าต่างโปรแกรม เลือกไฟล์ทีละคู่แล้วกด CHECK</p>
+      </div></li>
+      <li><div>
+        <p><b>เปิดผลที่ <code>output\BL CHECK &lt;เลข B/L&gt;.xlsx</code></b></p>
+        <p class="note">หน้าจอดำจะสรุปหัวข้อที่ไม่ตรงให้ด้วย ถ้าเปิดไฟล์ Excel ค้างไว้ ต้องปิดก่อนรันใหม่</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section class="panel" id="rider">
+    <h2>RIDER / AS PER ATTACHED</h2>
+    <ul class="check-list">
+      <li>หน้า 2 เป็นต้นไปของ PDF แต่ละฝั่ง อ่านเป็น RIDER ให้อัตโนมัติ</li>
+      <li>ถ้า RIDER เป็นไฟล์แยก ตั้งชื่อให้มีเลข B/L และคำว่า <code>RIDER</code> เช่น <code>CLIENT RIDER HASLS22260901995.pdf</code>, <code>DRAFT HAL RIDER HASLS22260901995.pdf</code></li>
+      <li>เทียบ RIDER สองฝั่งทีละบรรทัด ทีละตู้ (SEAL, จำนวนหีบห่อ, น้ำหนัก) และยอดรวม KGS ที่เขียนใน RIDER</li>
+      <li>ถ้าฝั่งหนึ่งเขียน <code>AS PER ATTACHED RIDER</code> / <code>SEE ATTACHED SHEET</code> / <code>AS PER ATTACHED DESCRIPTIONS</code> แต่อีกฝั่งพิมพ์รายละเอียดไว้ในช่องนั้น จะไปหารายละเอียดใน RIDER ให้ เจอครบ = สีฟ้า ไม่เจอ = สีแดง</li>
+      <li>เขียน AS PER ATTACHED แต่ไม่มีหน้า RIDER = ขึ้นแดงพร้อมคำเตือน</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="read">
+    <h2>อ่านรายงาน BL CHECK.xlsx</h2>
+    <p class="sub">หนึ่งแถวต่อหนึ่งหัวข้อ ค่าของ CLIENT กับ DRAFT วางคู่กัน ช่องขวาสุดบอกว่าต่างกันตรงไหน ชีต RIDER CHECK แสดง RIDER สองฝั่งเทียบกันทีละบรรทัด</p>
+    <div class="sheet-scroll">
+      <table class="sheet">
+        <thead><tr><th>NO.</th><th>FIELD</th><th>CLIENT B/L</th><th>DRAFT HAL B/L</th><th>RESULT</th><th>DETAILS OF DIFFERENCE</th></tr></thead>
+        <tbody>
+          <tr class="g"><td>2</td><td>SHIPPER</td><td>ABC TRADING CO., LTD.</td><td>ABC TRADING CO., LTD.</td><td>MATCH</td><td></td></tr>
+          <tr class="r"><td>12</td><td>CONTAINER NO. / SEAL NO.</td><td class="mono">ABCU1234567 SL0001 DG</td><td class="mono">ABCU1234567 SL0001</td><td>NOT MATCH</td><td>CLIENT has: "DG"</td></tr>
+          <tr class="r"><td>16</td><td>GROSS WEIGHT</td><td class="mono">13,842.000 KGS</td><td class="mono">15,163.200 KGS</td><td>NOT MATCH</td><td>difference -1,321.200 KGS</td></tr>
+          <tr class="y"><td>6</td><td>PLACE OF RECEIPT</td><td>LAEM CHABANG</td><td>—</td><td>MISSING IN DRAFT</td><td>DRAFT is blank</td></tr>
+          <tr class="b"><td>15</td><td>DESCRIPTION OF GOODS</td><td>CHEMICAL …</td><td>AS PER ATTACHED RIDER</td><td>MATCH (via rider)</td><td>found in DRAFT rider</td></tr>
+          <tr class="f"><td>25</td><td>NO. OF ORIGINAL B(S)/L</td><td>3 / THREE</td><td>THREE(3)</td><td>MATCH (format differs)</td><td>Both = 3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">ตัวอย่างประกอบเท่านั้น ชื่อบริษัทและเลขตู้สมมติ</p>
+    <div class="legend">
+      <div class="r"><b>แดง</b><span>ไม่ตรงกัน ต้องแก้หรือยืนยันก่อนออก B/L</span></div>
+      <div class="y"><b>เหลือง</b><span>มีข้อมูลแค่ฝั่งเดียว อีกฝั่งว่าง</span></div>
+      <div class="b"><b>ฟ้า</b><span>ตรงกัน โดยหาเจอใน RIDER</span></div>
+      <div class="g"><b>เขียว</b><span>ตรงกัน</span></div>
+      <div class="f"><b>เขียวอ่อน</b><span>ค่าเดียวกัน เขียนต่างแบบ</span></div>
+      <div class="e"><b>เทา</b><span>ว่างทั้งสองฝั่ง</span></div>
+    </div>
+    <div class="split">
+      <div>
+        <h3>27 หัวข้อที่เทียบทุก B/L</h3>
+        <ol class="fields">
+          <li>B/L NO.</li><li>SHIPPER</li><li>CONSIGNEE</li><li>NOTIFY PARTY</li><li>PRE CARRIAGE BY</li>
+          <li>PLACE OF RECEIPT</li><li>OCEAN VESSEL VOY NO.</li><li>PORT OF LOADING</li><li>PORT OF DISCHARGE</li>
+          <li>PLACE OF DELIVERY</li><li>FINAL DESTINATION</li><li>CONTAINER NO. / SEAL NO.</li><li>NO. OF CONTAINERS OR PKGS</li>
+          <li>MARKS AND NUMBERS</li><li>KIND OF PACKAGES / DESCRIPTION</li><li>GROSS WEIGHT</li><li>MEASUREMENT</li>
+          <li>TOTAL (IN WORDS)</li><li>FREIGHT AND CHARGES</li><li>EX RATE</li><li>PREPAID AT</li><li>PAYABLE AT</li>
+          <li>PLACE AND DATE OF ISSUE</li><li>TOTAL PREPAID IN LOCAL CURRENCY</li><li>NO. OF ORIGINAL B(S)/L</li>
+          <li>DATE / LADEN ON BOARD</li><li>CY/CY</li>
+        </ol>
+      </div>
+      <div>
+        <h3>เตือนเพิ่มเมื่อเจอ</h3>
+        <ul class="check-list">
+          <li>เลขตู้ผิดหลักตรวจสอบ (ISO 6346)</li>
+          <li>GROSS WEIGHT น้อยกว่า N.W. ในรายละเอียดสินค้า</li>
+          <li>จำนวนตู้ใน TOTAL (IN WORDS) ไม่ตรงกับเลขตู้ที่ระบุ</li>
+          <li>เลข B/L ในชื่อไฟล์ไม่ตรงกับในเอกสาร</li>
+          <li>วันที่ ON BOARD หลังวันที่ออก B/L</li>
+          <li>เขียน AS PER ATTACHED แต่ไม่มีหน้า RIDER</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="claude">
+    <h2>ใช้กับ Claude Code</h2>
+    <p class="sub">สำหรับคนที่ใช้ Claude Code อยู่แล้ว ให้ Claude ตรวจ อธิบายผล และเพิ่มแบบฟอร์ม B/L ใหม่ได้เอง</p>
+    <div class="cmd">
+      <pre id="clone">git clone https://github.com/Rattanao/B-L-CHECK-REPORT-Export.git %USERPROFILE%\.claude\skills\bl-check</pre>
+      <button type="button" id="copy-clone" data-target="clone">คัดลอก</button>
+    </div>
+    <p class="note">เปิด Claude Code ใหม่ ไปที่โฟลเดอร์งาน แล้วพิมพ์ เช่น “เช็ค B/L HASLS22260901995”</p>
+  </section>
+
+  <section class="panel" id="help">
+    <h2>ถ้าเจอปัญหา</h2>
+    <div class="trouble-scroll">
+      <table class="trouble">
+        <thead><tr><th>ข้อความ / อาการ</th><th>วิธีแก้</th></tr></thead>
+        <tbody>
+          <tr><td>ไม่พบ Python</td><td>ติดตั้ง Python ใหม่ และติ๊ก Add python.exe to PATH</td></tr>
+          <tr><td>PermissionError / Cannot save</td><td>ปิดไฟล์ BL CHECK.xlsx ใน Excel แล้วรันใหม่</td></tr>
+          <tr><td>No CLIENT/DRAFT PDF pairs found</td><td>ตรวจว่าไฟล์อยู่ในโฟลเดอร์ input ชื่อไฟล์มีเลข B/L และไฟล์ HAL มีคำว่า DRAFT</td></tr>
+          <tr><td>No text found in the PDF</td><td>PDF เป็นไฟล์สแกนเป็นรูปภาพ ต้องใช้ PDF ที่เลือกข้อความได้</td></tr>
+          <tr><td>Form layout not recognised well / ช่องว่างเยอะผิดปกติ</td><td>B/L เป็นแบบฟอร์มที่ยังไม่รองรับ เพิ่มตำแหน่งช่องใน <code>scripts\layouts.json</code> หรือให้ Claude Code เพิ่มให้</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>รายงานนี้เป็นตัวช่วยตรวจ ก่อนออก B/L จริงต้องให้คนตรวจทุกช่องที่เป็นสีแดงหรือสีเหลืองเสมอ</p>
+    <p>อัปเดตโปรแกรม: ดาวน์โหลด ZIP ใหม่แล้วแตกทับโฟลเดอร์เดิม · ดูโค้ดที่ <a href="https://github.com/Rattanao/B-L-CHECK-REPORT-Export">github.com/Rattanao/B-L-CHECK-REPORT-Export</a></p>
+  </footer>
+</div>
+
+<script>
+document.querySelectorAll('button[data-target]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var el = document.getElementById(btn.dataset.target);
+    var text = el.textContent;
+    var done = function () { btn.textContent = 'คัดลอกแล้ว'; setTimeout(function () { btn.textContent = 'คัดลอก'; }, 1600); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'กด Ctrl+C';
+    };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>
+</body>
+</html>

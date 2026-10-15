@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B-L-CHECK</title>
+<link rel="icon" href="hal-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --navy: #1f3864; --navy-soft: #d9e1f2; --bg: #f3f5f9; --card: #ffffff;
+    --text: #1d2433; --muted: #5b6474; --line: #d5dae3;
+    --red: #9c0006; --red-bg: #ffc7ce; --green: #006100; --green-bg: #c6efce; --fmt-bg: #e2f0d9;
+    --yellow: #ffeb9c; --blue-bg: #ddebf7; --grey-bg: #f2f2f2; --orange: #fce4d6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Sarabun", Tahoma, sans-serif; background: var(--bg); color: var(--text); }
+  header { background: var(--navy); color: #fff; padding: 14px 16px; }
+  header .wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header .logo { background: #fff; border-radius: 8px; padding: 6px 10px; display: flex; }
+  header .logo img { height: 40px; width: auto; display: block; }
+  header h1 { margin: 0; font-size: 26px; letter-spacing: 1px; }
+  header p { margin: 0; opacity: .85; font-size: 15px; }
+  .wrap { max-width: 1400px; margin: 0 auto; }
+  main { padding: 20px 16px 40px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 18px; }
+  .pick { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; }
+  @media (max-width: 860px) { .pick { grid-template-columns: 1fr; } }
+  label.t { display: block; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .drop { border: 2px dashed #9aa8c3; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; background: #fafbfd; transition: .15s; min-height: 64px; }
+  .drop.over { background: var(--navy-soft); border-color: var(--navy); }
+  .drop b { color: var(--navy); }
+  button { font: inherit; font-weight: 600; font-size: 16px; border: 0; border-radius: 8px; padding: 12px 22px; cursor: pointer; background: var(--navy); color: #fff; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .files { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 8px; }
+  .file { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 6px 5px 12px; font-size: 14px; max-width: 100%; }
+  .file .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file .k { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+  .file .k.BL { background: var(--navy-soft); color: var(--navy); }
+  .file .k.RIDER { background: var(--blue-bg); color: #1f4e78; border: 1px solid #9dc3e6; }
+  .file .x { cursor: pointer; border: 0; background: #eef0f5; color: var(--muted); border-radius: 50%; width: 22px; height: 22px; padding: 0; font-size: 13px; line-height: 22px; flex: none; }
+  .rules { font-size: 14px; color: var(--muted); margin: 14px 0 0; line-height: 1.7; }
+  .rules code { background: var(--navy-soft); color: var(--navy); padding: 1px 6px; border-radius: 4px; }
+  .msg { color: var(--red); font-weight: 600; margin-top: 10px; white-space: pre-line; }
+  .info { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
+  .info div { padding: 8px 14px; border-right: 1px solid var(--line); }
+  .info .k { background: var(--navy-soft); color: var(--navy); font-weight: 700; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip { border-radius: 999px; padding: 6px 14px; font-weight: 700; border: 1px solid rgba(0,0,0,.08); }
+  .chip.bad { background: var(--red-bg); color: var(--red); }
+  .chip.ok { background: var(--green-bg); color: var(--green); }
+  .chip.all { background: var(--navy-soft); color: var(--navy); }
+  .chip.warn { background: var(--orange); color: #8a3d0b; }
+  .legend { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border: 1px solid #bbb; vertical-align: -1px; margin: 0 4px 0 10px; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .toolbar label { display: flex; gap: 6px; align-items: center; cursor: pointer; user-select: none; }
+  .toolbar .sp { flex: 1; }
+  .tbl { overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+  th { background: var(--navy); color: #fff; padding: 9px 8px; position: sticky; top: 0; z-index: 3; white-space: nowrap; text-align: left; }
+  td { padding: 6px 10px; border-top: 1px solid var(--line); border-right: 1px solid rgba(0,0,0,.05); vertical-align: top; white-space: pre-line; }
+  td.no { text-align: center; width: 44px; }
+  td.fld { font-weight: 700; min-width: 170px; max-width: 230px; }
+  td.val { min-width: 220px; max-width: 360px; font-family: Consolas, "Courier New", monospace; font-size: 12.5px; }
+  td.st { font-weight: 700; white-space: nowrap; }
+  td.det { min-width: 240px; max-width: 420px; }
+  tr.s-ok td { background: var(--green-bg); }
+  tr.s-fmt td { background: var(--fmt-bg); }
+  tr.s-empty td { background: var(--grey-bg); color: var(--muted); }
+  tr.s-bad td { background: var(--red-bg); }
+  tr.s-bad td.st, tr.s-bad td.det { color: var(--red); }
+  tr.s-miss td { background: var(--yellow); }
+  tr.s-rider td { background: var(--blue-bg); }
+  h2 { font-size: 18px; color: var(--navy); margin: 22px 0 10px; }
+  ol.warns { margin: 0; padding-left: 22px; line-height: 1.8; }
+  ol.warns b { color: #8a3d0b; }
+  .hidden { display: none; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding-bottom: 24px; }
+  footer a { color: var(--navy); }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="logo"><img src="hal-logo.png" alt="HEUNG A LINE"></div>
+  <h1>B-L-CHECK</h1>
+  <p>ตรวจ B/L ของลูกค้าเทียบ DRAFT HAL ครบ 27 หัวข้อ + RIDER / AS PER ATTACHED</p>
+</div></header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="pick">
+      <div>
+        <label class="t">CLIENT B/L (.pdf) — B/L จากลูกค้า</label>
+        <div class="drop" id="drop-client" data-side="client"><span>ลากไฟล์มาวาง หรือ <b>คลิกเพื่อเลือกไฟล์</b></span></div>
+        <div class="files" id="files-client"></div>
+      </div>
+      <div>
+        <label class="t">DRAFT HAL B/L (.pdf) — DRAFT จากระบบ HAL</label>
+        <div class="drop" id="drop-draft" data-side="draft"><span>ลากไฟล์มาวาง หรือ <b>คลิกเพื่อเลือกไฟล์</b></span></div>
+        <div class="files" id="files-draft"></div>
+      </div>
+      <button id="run" disabled>ตรวจสอบ</button>
+    </div>
+    <input type="file" id="file" accept=".pdf" multiple class="hidden">
+    <p class="rules">
+      วางไฟล์ทั้งสองพร้อมกันที่ช่องไหนก็ได้ ไฟล์ที่ชื่อมีคำว่า <code>DRAFT</code> จะเข้าช่อง DRAFT ให้เอง ·
+      <b>RIDER</b>: หน้า 2 เป็นต้นไปของ PDF อ่านเป็น RIDER อัตโนมัติ ถ้า RIDER เป็นไฟล์แยก ให้วางเพิ่มในช่องเดียวกัน (ชื่อไฟล์มี <code>RIDER</code> หรือเป็นไฟล์ที่ 2) ·
+      ถ้าฝั่งหนึ่งเขียน <code>AS PER ATTACHED RIDER</code> / <code>AS PER ATTACHED DESCRIPTIONS</code> จะไปหาข้อมูลใน RIDER ให้<br>
+      ไฟล์ถูกประมวลผลในเบราว์เซอร์ของคุณเท่านั้น ไม่มีการอัปโหลดไปที่ใด
+    </p>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section class="card hidden" id="result">
+    <div class="info" id="info"></div>
+    <div class="chips" id="chips"></div>
+    <div class="legend">สี: <i style="background:#c6efce"></i>ตรงกัน <i style="background:#e2f0d9"></i>ตรงกัน (เขียนต่างแบบ)
+      <i style="background:#ddebf7"></i>ตรงกันโดยดูจาก RIDER <i style="background:#ffc7ce"></i>ไม่ตรง ⚠
+      <i style="background:#ffeb9c"></i>มีข้อมูลแค่ฝั่งเดียว <i style="background:#f2f2f2"></i>ว่างทั้งสองฝั่ง</div>
+    <div class="toolbar">
+      <label><input type="checkbox" id="onlyBad"> แสดงเฉพาะที่ไม่ตรง</label>
+      <span class="sp"></span>
+      <button id="download">ดาวน์โหลด BL CHECK.xlsx</button>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>NO.</th><th>FIELD</th><th>CLIENT B/L</th><th>DRAFT HAL B/L</th><th>RESULT</th><th>DETAILS OF DIFFERENCE</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <div id="rider"></div>
+    <div id="warns"></div>
+  </section>
+</main>
+<footer><a href="../guide.html">คู่มือการใช้งาน / ดาวน์โหลดโปรแกรม</a> · <a href="https://github.com/Rattanao/B-L-CHECK-REPORT-Export">github.com/Rattanao/B-L-CHECK-REPORT-Export</a></footer>
+
+<script src="core.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const C = window.BLCheck;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const files = { client: [], draft: [] };   // {name, size, pages}
+let result = null, pickSide = "client";
+
+// ---------- เลือกไฟล์ ----------
+function sideFor(name, dropped) {
+  if (C.isDraftName(name)) return "draft";
+  if (/CLIENT|SHIPPER/i.test(name)) return "client";
+  return dropped;
+}
+async function addFiles(list, dropped) {
+  $("msg").textContent = "";
+  for (const f of list) {
+    if (!/\.pdf$/i.test(f.name)) { $("msg").textContent += `${f.name}: รับเฉพาะไฟล์ .pdf\n`; continue; }
+    const side = sideFor(f.name, dropped);
+    if (files[side].some(x => x.name === f.name && x.size === f.size)) continue;
+    try {
+      files[side].push({ name: f.name, size: f.size, pages: await C.pdfWords(pdfjsLib, new Uint8Array(await f.arrayBuffer())) });
+    } catch (err) {
+      $("msg").textContent += `อ่านไฟล์ ${f.name} ไม่ได้: ${err.message}\n`;
+    }
+  }
+  renderFiles();
+}
+// ไฟล์ B/L = ไฟล์แรกที่ชื่อไม่มี RIDER; ที่เหลือ = RIDER
+function roles(list) {
+  const main = list.find(f => !C.isRiderName(f.name)) || list[0];
+  return { main, riders: list.filter(f => f !== main) };
+}
+function renderFiles() {
+  for (const side of ["client", "draft"]) {
+    const { main } = roles(files[side]);
+    $("files-" + side).innerHTML = files[side].map((f, i) =>
+      `<span class="file"><span class="n" title="${esc(f.name)}">${esc(f.name)}</span>` +
+      `<span class="k ${f === main ? "BL" : "RIDER"}">${f === main ? "B/L" : "RIDER"}</span>` +
+      `<button class="x" data-side="${side}" data-i="${i}" title="เอาออก">×</button></span>`).join("");
+  }
+  $("run").disabled = !(files.client.length && files.draft.length);
+}
+
+// ---------- ตรวจ ----------
+function run() {
+  $("msg").textContent = "";
+  try {
+    const doc = side => {
+      const { main, riders } = roles(files[side]);
+      return C.extractBl(main.name, main.pages, riders.map(r => r.name).join(", "), riders.flatMap(r => r.pages));
+    };
+    result = C.checkPair(doc("client"), doc("draft"));
+    render();
+  } catch (err) {
+    $("msg").textContent = "เกิดข้อผิดพลาด: " + err.message;
+    console.error(err);
+  }
+}
+
+const CLS = { [C.MATCH]: "ok", [C.FORMAT]: "fmt", [C.EMPTY]: "empty", [C.MISMATCH]: "bad",
+  [C.ONLY_CLIENT]: "miss", [C.ONLY_DRAFT]: "miss", [C.VIA_RIDER]: "rider" };
+function cellText(r, side) {
+  const ls = r[side];
+  if (r.key !== C.RIDER_ROW[0]) return ls.join("\n");
+  return ls.length ? `${ls.length} บรรทัด\n` + ls.slice(0, 4).join("\n") + (ls.length > 4 ? "\n…" : "") : "";
+}
+function render() {
+  const { rows, notes, riderDiffs, client, draft } = result;
+  const bad = rows.filter(r => C.isProblem(r.status)).length;
+  $("info").innerHTML =
+    `<div class="k">B/L NO.</div><div>${esc(C.blNumber(result))}</div>` +
+    `<div class="k">CLIENT</div><div>${esc(client.file)} · ${esc(client.layout)}</div>` +
+    `<div class="k">DRAFT</div><div>${esc(draft.file)} · ${esc(draft.layout)}</div>`;
+  $("chips").innerHTML =
+    `<span class="chip all">ทั้งหมด ${rows.length} หัวข้อ</span>` +
+    (bad ? `<span class="chip bad">⚠ ไม่ตรง ${bad}</span>` : `<span class="chip ok">✔ ตรงทุกหัวข้อ</span>`) +
+    `<span class="chip ok">✔ ตรง ${rows.length - bad}</span>` +
+    (notes.length ? `<span class="chip warn">คำเตือนอื่น ${notes.length}</span>` : "");
+  drawRows();
+  $("rider").innerHTML = riderDiffs.length ? `<h2>RIDER — จุดที่ต่างกัน (${riderDiffs.length})</h2><div class="tbl"><table>` +
+    `<thead><tr><th>NO.</th><th>CLIENT RIDER</th><th>DRAFT RIDER</th><th>RESULT</th><th>DETAILS</th></tr></thead><tbody>` +
+    riderDiffs.map((d, i) => `<tr class="s-${CLS[d.status]}"><td class="no">${i + 1}</td><td class="val">${esc(d.client)}</td>` +
+      `<td class="val">${esc(d.draft)}</td><td class="st">${esc(d.status)}</td><td class="det">${esc(d.detail)}</td></tr>`).join("") +
+    `</tbody></table></div>` : "";
+  $("warns").innerHTML = notes.length ? `<h2>คำเตือนอื่น</h2><ol class="warns">` +
+    notes.map(([s, m]) => `<li><b>${esc(s)}</b> — ${esc(m)}</li>`).join("") + "</ol>" : "";
+  $("result").classList.remove("hidden");
+  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function drawRows() {
+  const only = $("onlyBad").checked;
+  $("tbody").innerHTML = result.rows.filter(r => !only || C.isProblem(r.status)).map(r =>
+    `<tr class="s-${CLS[r.status]}"><td class="no">${r.no}</td><td class="fld">${esc(r.field)}</td>` +
+    `<td class="val">${esc(cellText(r, "client"))}</td><td class="val">${esc(cellText(r, "draft"))}</td>` +
+    `<td class="st">${esc(r.status)}</td><td class="det">${esc(r.detail)}</td></tr>`).join("");
+}
+
+// ---------- ส่งออก Excel (หน้าตาเดียวกับ bl_checker.py) ----------
+const FILL = { [C.MATCH]: "C6EFCE", [C.FORMAT]: "E2F0D9", [C.EMPTY]: "F2F2F2", [C.MISMATCH]: "FFC7CE",
+  [C.ONLY_CLIENT]: "FFEB9C", [C.ONLY_DRAFT]: "FFEB9C", [C.VIA_RIDER]: "DDEBF7" };
+async function download() {
+  const res = result, bl = C.blNumber(res);
+  const wb = new ExcelJS.Workbook();
+  const fill = c => ({ type: "pattern", pattern: "solid", fgColor: { argb: "FF" + c } });
+  const thin = { style: "thin", color: { argb: "FF999999" } };
+  const box = { left: thin, right: thin, top: thin, bottom: thin };
+  const wrap = { wrapText: true, vertical: "top" };
+  const header = (ws, r, titles) => titles.forEach((h, j) => {
+    const c = ws.getCell(r, j + 1);
+    c.value = h; c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = fill("1F4E78"); c.border = box;
+    c.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  });
+  const page = ws => { ws.pageSetup = { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 }; };
+
+  const ws = wb.addWorksheet("B-L CHECK", { views: [{ state: "frozen", ySplit: 7 }] });
+  const nBad = res.rows.filter(r => C.isProblem(r.status)).length;
+  ws.getCell("A1").value = `B/L CHECK REPORT  -  B/L NO. ${bl}`; ws.getCell("A1").font = { bold: true, size: 14 };
+  ws.getCell("A2").value = `CLIENT B/L : ${res.client.file}   (layout: ${res.client.layout})`;
+  ws.getCell("A3").value = `DRAFT HAL  : ${res.draft.file}   (layout: ${res.draft.layout})`;
+  const t = res.checkedAt, mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()];
+  ws.getCell("A4").value = `Checked    : ${String(t.getDate()).padStart(2, "0")}-${mon}-${t.getFullYear()} ` +
+    `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
+  ws.getCell("A5").value = nBad ? `RESULT: ${nBad} FIELD(S) NOT MATCHED  -  see red / yellow rows` : `RESULT: ALL ${res.rows.length} FIELDS MATCH`;
+  ws.getCell("A5").font = { bold: true, size: 12, color: { argb: nBad ? "FF9C0006" : "FF006100" } };
+  header(ws, 7, ["NO.", "FIELD", "CLIENT B/L", "DRAFT HAL B/L", "RESULT", "DETAILS OF DIFFERENCE"]);
+  res.rows.forEach((r, i) => {
+    const show = ls => r.key !== C.RIDER_ROW[0] ? ls.join("\n") :
+      (ls.length ? `${ls.length} line(s) - full text on RIDER CHECK sheet\n` + ls.slice(0, 4).join("\n") + (ls.length > 4 ? "\n..." : "") : "");
+    const ct = show(r.client), dt = show(r.draft);
+    [r.no, r.field, ct, dt, r.status, r.detail].forEach((v, j) => {
+      const c = ws.getCell(8 + i, j + 1);
+      c.value = v; c.alignment = wrap; c.border = box; c.fill = fill(FILL[r.status]);
+      if (j === 1 || j === 4) c.font = { bold: true };
+    });
+    const lines = Math.max(ct.split("\n").length, dt.split("\n").length, Math.floor(r.detail.length / 45) + 1);
+    ws.getRow(8 + i).height = Math.max(15, 13 * lines);
+  });
+  [5, 26, 45, 45, 17, 48].forEach((w, j) => { ws.getColumn(j + 1).width = w; });
+  const r0 = 8 + res.rows.length + 1;
+  ws.getCell(r0, 1).value = "OTHER WARNINGS"; ws.getCell(r0, 1).font = { bold: true, size: 12 };
+  if (!res.notes.length) ws.getCell(r0 + 1, 2).value = "None";
+  res.notes.forEach(([side, msg], i) => {
+    const r = r0 + 1 + i;
+    ws.getCell(r, 1).value = i + 1; ws.getCell(r, 2).value = side; ws.getCell(r, 2).font = { bold: true };
+    ws.getCell(r, 3).value = msg; ws.mergeCells(r, 3, r, 6); ws.getCell(r, 3).alignment = wrap;
+    for (let c = 1; c <= 6; c++) ws.getCell(r, c).fill = fill("FCE4D6");
+  });
+  page(ws);
+  ws.pageSetup.printTitlesRow = "7:7";
+
+  const a = res.client.rider, b = res.draft.rider;
+  const refs = [...new Set(res.client.riderRefs.concat(res.draft.riderRefs))].sort();
+  if (a.length || b.length || refs.length) {
+    const rs = wb.addWorksheet("RIDER CHECK");
+    const rr = res.rows[res.rows.length - 1];
+    const src = (doc, ls) => ls.length ? `${ls.length} line(s) from ${doc.riderFile || doc.file}` : "NONE";
+    rs.getCell("A1").value = `RIDER / ATTACHED SHEET CHECK  -  B/L NO. ${bl}`; rs.getCell("A1").font = { bold: true, size: 14 };
+    rs.getCell("A2").value = "CLIENT rider: " + src(res.client, a);
+    rs.getCell("A3").value = "DRAFT rider : " + src(res.draft, b);
+    rs.getCell("A4").value = `'AS PER ATTACHED' written in: ${refs.length ? refs.join(", ") : "-"}`;
+    rs.getCell("A5").value = `RESULT: ${rr.status}  -  ${rr.detail}`;
+    rs.getCell("A5").font = { bold: true, size: 12, color: { argb: C.isProblem(rr.status) ? "FF9C0006" : "FF006100" } };
+    let row = 7;
+    rs.getCell(row, 1).value = "DIFFERENCES"; rs.getCell(row, 1).font = { bold: true, size: 12 };
+    header(rs, ++row, ["NO.", "CLIENT RIDER", "DRAFT RIDER", "RESULT", "DETAILS"]);
+    if (!res.riderDiffs.length) rs.getCell(++row, 2).value = "No differences";
+    res.riderDiffs.forEach((d, i) => {
+      row++;
+      [i + 1, d.client, d.draft, d.status, d.detail].forEach((v, j) => {
+        const c = rs.getCell(row, j + 1); c.value = v; c.alignment = wrap; c.border = box; c.fill = fill(FILL[d.status]);
+      });
+    });
+    row += 2;
+    rs.getCell(row, 1).value = "FULL RIDER TEXT (side by side)"; rs.getCell(row, 1).font = { bold: true, size: 12 };
+    header(rs, ++row, ["LINE", "CLIENT RIDER", "DRAFT RIDER"]);
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      row++;
+      rs.getCell(row, 1).value = i + 1; rs.getCell(row, 1).border = box;
+      [[2, a], [3, b]].forEach(([c, ls]) => { const x = rs.getCell(row, c); x.value = ls[i] || ""; x.alignment = wrap; x.border = box; });
+    }
+    [6, 60, 60, 20, 50].forEach((w, j) => { rs.getColumn(j + 1).width = w; });
+    page(rs);
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  link.download = `BL CHECK ${bl}.xlsx`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+// ---------- events ----------
+for (const side of ["client", "draft"]) {
+  const drop = $("drop-" + side);
+  drop.onclick = () => { pickSide = side; $("file").click(); };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); addFiles([...e.dataTransfer.files], side); };
+  $("files-" + side).onclick = e => {
+    const i = e.target.dataset.i;
+    if (i !== undefined) { files[e.target.dataset.side].splice(+i, 1); renderFiles(); }
+  };
+}
+$("file").onchange = e => { addFiles([...e.target.files], pickSide); e.target.value = ""; };
+$("run").onclick = run;
+$("onlyBad").onchange = () => result && drawRows();
+$("download").onclick = download;
+</script>
+</body>
+</html>

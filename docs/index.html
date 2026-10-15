@@ -107,8 +107,9 @@
     </div>
     <input type="file" id="file" accept=".pdf" multiple class="hidden">
     <p class="rules">
-      วางไฟล์ทั้งสองพร้อมกันที่ช่องไหนก็ได้ ไฟล์ที่ชื่อมีคำว่า <code>DRAFT</code> จะเข้าช่อง DRAFT ให้เอง ·
-      <b>RIDER</b>: หน้า 2 เป็นต้นไปของ PDF อ่านเป็น RIDER อัตโนมัติ ถ้า RIDER เป็นไฟล์แยก ให้วางเพิ่มในช่องเดียวกัน (ชื่อไฟล์มี <code>RIDER</code> หรือเป็นไฟล์ที่ 2) ·
+      ตั้งชื่อไฟล์อะไรก็ได้ วาง B/L ของลูกค้าในช่อง CLIENT และ DRAFT ของ HAL ในช่อง DRAFT ·
+      <b>RIDER</b>: หน้า 2 เป็นต้นไปของ PDF อ่านเป็น RIDER อัตโนมัติ ถ้า RIDER เป็นไฟล์แยก ให้วางเพิ่มในช่องเดียวกัน
+      (ไฟล์แรก = B/L, ไฟล์ถัดไป = RIDER — คลิกป้าย <code>RIDER</code> เพื่อสลับให้เป็น B/L) ·
       ถ้าฝั่งหนึ่งเขียน <code>AS PER ATTACHED RIDER</code> / <code>AS PER ATTACHED DESCRIPTIONS</code> จะไปหาข้อมูลใน RIDER ให้<br>
       ไฟล์ถูกประมวลผลในเบราว์เซอร์ของคุณเท่านั้น ไม่มีการอัปโหลดไปที่ใด
     </p>
@@ -146,16 +147,11 @@ const files = { client: [], draft: [] };   // {name, size, pages}
 let result = null, pickSide = "client";
 
 // ---------- เลือกไฟล์ ----------
-function sideFor(name, dropped) {
-  if (C.isDraftName(name)) return "draft";
-  if (/CLIENT|SHIPPER/i.test(name)) return "client";
-  return dropped;
-}
-async function addFiles(list, dropped) {
+// ไฟล์อยู่ในช่องที่วาง/เลือกเสมอ ไม่ดูชื่อไฟล์ — ตั้งชื่ออะไรก็ได้
+async function addFiles(list, side) {
   $("msg").textContent = "";
   for (const f of list) {
     if (!/\.pdf$/i.test(f.name)) { $("msg").textContent += `${f.name}: รับเฉพาะไฟล์ .pdf\n`; continue; }
-    const side = sideFor(f.name, dropped);
     if (files[side].some(x => x.name === f.name && x.size === f.size)) continue;
     try {
       files[side].push({ name: f.name, size: f.size, pages: await C.pdfWords(pdfjsLib, new Uint8Array(await f.arrayBuffer())) });
@@ -165,17 +161,16 @@ async function addFiles(list, dropped) {
   }
   renderFiles();
 }
-// ไฟล์ B/L = ไฟล์แรกที่ชื่อไม่มี RIDER; ที่เหลือ = RIDER
+// ไฟล์แรกในช่อง = B/L, ไฟล์ที่เหลือ = RIDER (คลิกป้าย RIDER เพื่อสลับให้เป็น B/L)
 function roles(list) {
-  const main = list.find(f => !C.isRiderName(f.name)) || list[0];
-  return { main, riders: list.filter(f => f !== main) };
+  return { main: list[0], riders: list.slice(1) };
 }
 function renderFiles() {
   for (const side of ["client", "draft"]) {
-    const { main } = roles(files[side]);
     $("files-" + side).innerHTML = files[side].map((f, i) =>
       `<span class="file"><span class="n" title="${esc(f.name)}">${esc(f.name)}</span>` +
-      `<span class="k ${f === main ? "BL" : "RIDER"}">${f === main ? "B/L" : "RIDER"}</span>` +
+      (i === 0 ? `<span class="k BL">B/L</span>`
+        : `<button class="k RIDER" data-side="${side}" data-main="${i}" title="คลิกเพื่อใช้ไฟล์นี้เป็น B/L">RIDER</button>`) +
       `<button class="x" data-side="${side}" data-i="${i}" title="เอาออก">×</button></span>`).join("");
   }
   $("run").disabled = !(files.client.length && files.draft.length);
@@ -338,8 +333,9 @@ for (const side of ["client", "draft"]) {
   drop.ondragleave = () => drop.classList.remove("over");
   drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); addFiles([...e.dataTransfer.files], side); };
   $("files-" + side).onclick = e => {
-    const i = e.target.dataset.i;
-    if (i !== undefined) { files[e.target.dataset.side].splice(+i, 1); renderFiles(); }
+    const { i, main } = e.target.dataset, list = files[e.target.dataset.side];
+    if (i !== undefined) { list.splice(+i, 1); renderFiles(); }
+    if (main !== undefined) { list.unshift(...list.splice(+main, 1)); renderFiles(); }
   };
 }
 $("file").onchange = e => { addFiles([...e.target.files], pickSide); e.target.value = ""; };
